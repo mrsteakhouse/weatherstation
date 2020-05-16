@@ -82,10 +82,18 @@ void setupNetwork()
 
     WiFi.begin(Ssid, Password);
 
+    int retryCounter = 0;
     while (WiFi.status() != WL_CONNECTED)
     {
         delay(500);
         Serial.print(".");
+
+        if (retryCounter >= 20)
+        {
+            ESP.restart();
+        }
+
+        retryCounter++;
     }
 
     Serial.println("");
