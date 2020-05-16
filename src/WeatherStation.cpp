@@ -146,7 +146,7 @@ void setupAdapter(const IPAddress &ip)
     adapter->addDevice(&pumpPressure);
 
     adapter->begin();
-    delay(10000);
+    delay(3000);
 }
 
 void loop(void)
@@ -210,7 +210,7 @@ void setupSleep()
     bme.setSampling(Adafruit_BME280::MODE_FORCED);
     Wire.flush();
 
-    delay(3000);
+    delay(5000);
     WiFi.disconnect();
 
     Serial.println(FPSTR("Sleeping now"));
