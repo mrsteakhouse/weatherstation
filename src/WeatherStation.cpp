@@ -146,7 +146,7 @@ void setupAdapter(const IPAddress &ip)
     adapter->addDevice(&pumpPressure);
 
     adapter->begin();
-    delay(3000);
+    delay(5000);
 }
 
 void loop(void)
