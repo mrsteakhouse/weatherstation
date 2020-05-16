@@ -17,7 +17,7 @@
 #include <Adafruit_BMP280.h>
 #include <Adafruit_Sensor.h>
 
-#include <SetWifiCredentials.h>;
+#include <SetWifiCredentials.h>
 
 Adafruit_BME280 bme;
 Adafruit_BMP280 bmp;
@@ -31,9 +31,15 @@ ThingProperty humidityProp("humidity", "Humidity", NUMBER, "LevelProperty");
 ThingProperty pressureProp("pressure", "Air Pressure", NUMBER, "LevelProperty");
 ThingProperty pumpPressureProp("pressure", "Air Pressure", NUMBER, "LevelProperty");
 ThingProperty alarmProperty("alarm", "Danger", BOOLEAN, "AlarmPropery");
-WebThingAdapter* adapter = NULL;
+WebThingAdapter* adapter = nullptr;
 
 long sleepTime = 18e5;
+
+void setupNetwork();
+
+[[noreturn]] void setupSensors();
+void setupAdapter(const IPAddress& ip);
+void updateValues();
 
 void setup(void) {
   Serial.begin(115200);
@@ -81,11 +87,11 @@ void setupSensors()
 
   if (!bmp.begin(0x77)) {
     Serial.println(FPSTR("Could not find a valid BMP280 sensor"));
-    while (1);
+    while(true);
   }
   if (!bme.begin(0x76)) {
     Serial.println(FPSTR("Could not find a valid BME280 sensor"));
-    while (1);
+    while (true);
   }
 
   bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,
@@ -101,7 +107,7 @@ void setupSensors()
                   Adafruit_BME280::STANDBY_MS_250);
 }
 
-void setupAdapter(IPAddress ip)
+void setupAdapter(const IPAddress& ip)
 {
   adapter = new WebThingAdapter(FPSTR("weatherstation"), ip);
 
