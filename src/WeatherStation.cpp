@@ -214,7 +214,6 @@ void setupSleep()
     WiFi.disconnect();
 
     Serial.println(FPSTR("Sleeping now"));
-    ESP.deepSleep(sleepTime * uS_TO_S_FACTOR, RFMode::RF_DISABLED);
-
+    ESP.deepSleep(sleepTime * uS_TO_S_FACTOR, RFMode::RF_NO_CAL);
 }
 
