@@ -35,7 +35,7 @@ ThingProperty pumpPressureProp("pressure", "Air Pressure", NUMBER, "LevelPropert
 ThingProperty alarmProperty("alarm", "Danger", BOOLEAN, "AlarmPropery");
 WebThingAdapter *adapter = nullptr;
 
-long sleepTime = 18e5;
+long sleepTime = 18e2;
 
 void setupNetwork();
 
