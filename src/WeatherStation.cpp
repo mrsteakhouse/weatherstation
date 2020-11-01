@@ -1,12 +1,3 @@
-/**
-   Simple server compliant with Mozilla's proposed WoT API
-   Based on the RGBLamp example
-   Tested on Arduino Mega with Ethernet Shield
-   This Source Code Form is subject to the terms of the Mozilla Public
-   License, v. 2.0. If a copy of the MPL was not distributed with this
-   file, You can obtain one at http://mozilla.org/MPL/2.0/.
-*/
-
 #include <ESP8266WiFi.h>
 
 #include <Thing.h>
@@ -18,24 +9,28 @@
 #include <Adafruit_Sensor.h>
 
 #include <SetWifiCredentials.h>
+#include <PubSubClient.h>
+#include <sstream>
 
 #define uS_TO_S_FACTOR 1000000
+
+#define DEBUG
 
 Adafruit_BME280 bme;
 Adafruit_BMP280 bmp;
 
-const char *temperature[] = {"TemperatureSensor", "MultiLevelSensor", "Sensor", nullptr};
-const char *pressure[] = {"Alarm", "MultiLevelSensor", "Sensor", nullptr};
-ThingDevice weatherStation("WeatherStation", "Weather station", temperature);
-ThingDevice pumpPressure("PumpPressure", "Pressure from Airpump", pressure);
-ThingProperty temperatureProp("temperature", "Temperature", NUMBER, "TemperatureProperty");
-ThingProperty humidityProp("humidity", "Humidity", NUMBER, "LevelProperty");
-ThingProperty pressureProp("pressure", "Air Pressure", NUMBER, "LevelProperty");
-ThingProperty pumpPressureProp("pressure", "Air Pressure", NUMBER, "LevelProperty");
-ThingProperty alarmProperty("alarm", "Danger", BOOLEAN, "AlarmPropery");
-WebThingAdapter *adapter = nullptr;
+WiFiClient espClient;
+PubSubClient client(espClient);
 
-long sleepTime = 18e2;
+const IPAddress mqttServer = IPAddress(192, 168, 0, 59);
+
+static const char *const TEMPARTURE_NODE = "temperature";
+static const char *const TEMP_PROPERTY = "temp";
+static const char *const HUMIDITY_PROPERTY = "hum";
+static const char *const PRESSURE_PROPERTY = "p";
+static const char *const ALARM_PROPERTY = "alarm";
+static const char *const PUMP_NODE = "pump";
+long sleepTime = 36e2;
 
 void setupNetwork();
 
@@ -43,33 +38,32 @@ void setupSensors();
 
 void setupAdapter(const IPAddress &ip);
 
+void connectMqtt();
+
 void updateValues();
+
+void sendValue(const char* node, const char* property, const char* value);
 
 void setupSleep();
 
+std::string doubleToString(double number);
 
 void setup(void)
 {
     Serial.begin(115200);
     setupNetwork();
     IPAddress ip = WiFi.localIP();
-    Serial.print(FPSTR("log: IP="));
+    Serial.print(FPSTR("IP="));
     Serial.println(ip);
-    delay(3000);
-    Serial.println(FPSTR("Starting HTTP server"));
 
     setupSensors();
-    setupAdapter(ip);
-    Serial.print(FPSTR("http://"));
-    Serial.print(ip);
-    Serial.print(FPSTR("/things/"));
-    Serial.println(weatherStation.id);
-    Serial.println(pumpPressure.id);
+    connectMqtt();
 }
 
 void setupNetwork()
 {
     setWifiCredentials();
+    delay(20);
 
     WiFi.persistent(false);
     WiFi.mode(WIFI_STA);
@@ -102,7 +96,6 @@ void setupNetwork()
 
 void setupSensors()
 {
-    Wire.setClock(100000L);
     Wire.begin(0, 2);
 
     delay(1000);
@@ -123,35 +116,42 @@ void setupSensors()
                     Adafruit_BMP280::SAMPLING_X16,
                     Adafruit_BMP280::FILTER_X4,
                     Adafruit_BMP280::STANDBY_MS_250);
+    delay(20);
     bme.setSampling(Adafruit_BME280::MODE_NORMAL,
                     Adafruit_BME280::SAMPLING_X2,
                     Adafruit_BME280::SAMPLING_X16,
                     Adafruit_BME280::SAMPLING_X2,
                     Adafruit_BME280::FILTER_X4,
                     Adafruit_BME280::STANDBY_MS_250);
+    delay(20);
 }
 
-void setupAdapter(const IPAddress &ip)
+void connectMqtt()
 {
-    adapter = new WebThingAdapter(FPSTR("weatherstation"), ip);
+    client.setServer(mqttServer, 1883);
+    int retryCounter = 0;
+    String clientId = "living-room-weatherstation";
+    Serial.println(FPSTR("Connect to MQTT Broker"));
+    while(!client.connected() && retryCounter < 5)
+    {
+        if (client.connect(clientId.c_str()))
+        {
+            Serial.println(FPSTR("connection established"));
+            return;
+        }
 
-    weatherStation.addProperty(&humidityProp);
-    weatherStation.addProperty(&pressureProp);
-    weatherStation.addProperty(&temperatureProp);
+        Serial.println(FPSTR("Connection failed, retry in 1s"));
+        retryCounter++;
+        delay(1000);
+    }
 
-    pumpPressure.addProperty(&alarmProperty);
-    pumpPressure.addProperty(&pumpPressureProp);
-
-    adapter->addDevice(&weatherStation);
-    adapter->addDevice(&pumpPressure);
-
-    adapter->begin();
-    delay(10000);
+    Serial.println(FPSTR("No connection to MQTT Broker"));
 }
 
 void loop(void)
 {
     updateValues();
+
     Serial.print(FPSTR("Sleeping for "));
     Serial.println(sleepTime);
     setupSleep();
@@ -159,34 +159,24 @@ void loop(void)
 
 void updateValues()
 {
-    ThingPropertyValue tempPropValue;
-    ThingPropertyValue humdityPropValue;
-    ThingPropertyValue pressurePropValue;
-    ThingPropertyValue pumpPressurePropValue;
-    ThingPropertyValue alarmPropertyValue;
-
     double temp = bme.readTemperature() - 2;
     double hum = bme.readHumidity();
     double pr = bme.readPressure() / 100.0F;
     double pp = bmp.readPressure() / 100.0F;
-    tempPropValue.number = temp;
-    humdityPropValue.number = hum;
-    pressurePropValue.number = pr;
-    pumpPressurePropValue.number = pp;
 
-    alarmPropertyValue.boolean = pp - pr <= 5;
+    bool isAlarm = pp - pr > 5;
 
-    humidityProp.setValue(humdityPropValue);
-    adapter->update();
-    pressureProp.setValue(pressurePropValue);
-    adapter->update();
-    temperatureProp.setValue(tempPropValue);
-    adapter->update();
-    pumpPressureProp.setValue(pumpPressurePropValue);
-    adapter->update();
-    alarmProperty.setValue(alarmPropertyValue);
-    adapter->update();
+    sendValue(TEMPARTURE_NODE, TEMP_PROPERTY, doubleToString(temp).c_str());
+    delay(20);
+    sendValue(TEMPARTURE_NODE, HUMIDITY_PROPERTY, doubleToString(hum).c_str());
+    delay(20);
+    sendValue(TEMPARTURE_NODE, PRESSURE_PROPERTY, doubleToString(pr).c_str());
+    delay(20);
+    sendValue(PUMP_NODE, ALARM_PROPERTY, isAlarm ? "true" : "");
+    delay(20);
+    
 
+#ifdef DEBUG
     Serial.print(FPSTR("Temperature = "));
     Serial.print(temp);
     Serial.println(" *C");
@@ -195,25 +185,42 @@ void updateValues()
     Serial.print(pr);
     Serial.println(FPSTR(" hPa"));
 
-    Serial.print("Humidity = ");
+    Serial.print(FPSTR("Humidity = "));
     Serial.print(hum);
     Serial.println(FPSTR(" %"));
 
     Serial.print(FPSTR("Pump Pressure = "));
     Serial.print(pp);
     Serial.println(FPSTR(" hPa"));
+#endif
+}
+
+void sendValue(const char* node, const char* property, const char* value)
+{
+    char topicBuffer[128];
+    sprintf(topicBuffer, "homie/living-room-temp/%s/%s", node, property);
+#ifdef DEBUG
+    Serial.print(FPSTR("Publishing to: "));
+    Serial.println(topicBuffer);
+#endif
+    client.publish(topicBuffer, value, true);
 }
 
 void setupSleep()
 {
-    bmp.setSampling(Adafruit_BMP280::MODE_FORCED);
-    bme.setSampling(Adafruit_BME280::MODE_FORCED);
+    bmp.setSampling(Adafruit_BMP280::MODE_SLEEP);
+    bme.setSampling(Adafruit_BME280::MODE_SLEEP);
     Wire.flush();
-
-    delay(5000);
-    WiFi.disconnect();
 
     Serial.println(FPSTR("Sleeping now"));
     ESP.deepSleep(sleepTime * uS_TO_S_FACTOR, RFMode::RF_NO_CAL);
+    delay(100);
+}
+
+std::string doubleToString(double number)
+{
+    std::ostringstream stream;
+    stream << number;
+    return stream.str();
 }
 
