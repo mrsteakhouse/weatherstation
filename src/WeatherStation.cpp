@@ -20,7 +20,7 @@ PubSubClient client(espClient);
 
 const IPAddress mqttServer = IPAddress(192, 168, 0, 59);
 
-static const char *const TEMPARTURE_NODE = "temperature";
+static const char *const TEMPERATURE_NODE = "temperature";
 static const char *const TEMP_PROPERTY = "temp";
 static const char *const HUMIDITY_PROPERTY = "hum";
 static const char *const PRESSURE_PROPERTY = "p";
@@ -163,11 +163,11 @@ void updateValues()
 
     bool isAlarm = pp - pr > 5;
 
-    sendValue(TEMPARTURE_NODE, TEMP_PROPERTY, doubleToString(temp).c_str());
+    sendValue(TEMPERATURE_NODE, TEMP_PROPERTY, doubleToString(temp).c_str());
     delay(20);
-    sendValue(TEMPARTURE_NODE, HUMIDITY_PROPERTY, doubleToString(hum).c_str());
+    sendValue(TEMPERATURE_NODE, HUMIDITY_PROPERTY, doubleToString(hum).c_str());
     delay(20);
-    sendValue(TEMPARTURE_NODE, PRESSURE_PROPERTY, doubleToString(pr).c_str());
+    sendValue(TEMPERATURE_NODE, PRESSURE_PROPERTY, doubleToString(pr).c_str());
     delay(20);
     sendValue(PUMP_NODE, ALARM_PROPERTY, isAlarm ? "true" : "");
     delay(20);
