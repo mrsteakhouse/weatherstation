@@ -112,17 +112,17 @@ void setupSensors()
     }
 
     bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,
-                    Adafruit_BMP280::SAMPLING_X2,
-                    Adafruit_BMP280::SAMPLING_X16,
-                    Adafruit_BMP280::FILTER_X4,
-                    Adafruit_BMP280::STANDBY_MS_250);
+                    Adafruit_BMP280::SAMPLING_NONE,
+                    Adafruit_BMP280::SAMPLING_X1,
+                    Adafruit_BMP280::FILTER_OFF,
+                    Adafruit_BMP280::STANDBY_MS_1);
     delay(20);
-    bme.setSampling(Adafruit_BME280::MODE_NORMAL,
-                    Adafruit_BME280::SAMPLING_X2,
+    bme.setSampling(Adafruit_BME280::MODE_FORCED,
                     Adafruit_BME280::SAMPLING_X16,
-                    Adafruit_BME280::SAMPLING_X2,
-                    Adafruit_BME280::FILTER_X4,
-                    Adafruit_BME280::STANDBY_MS_250);
+                    Adafruit_BME280::SAMPLING_X1,
+                    Adafruit_BME280::SAMPLING_X8,
+                    Adafruit_BME280::FILTER_OFF,
+                    Adafruit_BME280::STANDBY_MS_10);
     delay(20);
 }
 
@@ -159,6 +159,7 @@ void loop(void)
 
 void updateValues()
 {
+    bme.takeForcedMeasurement();
     double temp = bme.readTemperature() - 2;
     double hum = bme.readHumidity();
     double pr = bme.readPressure() / 100.0F;
