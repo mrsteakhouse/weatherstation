@@ -12,10 +12,6 @@
 #include <PubSubClient.h>
 #include <sstream>
 
-#define uS_TO_S_FACTOR 1000000
-
-#define DEBUG
-
 Adafruit_BME280 bme;
 Adafruit_BMP280 bmp;
 
@@ -30,7 +26,7 @@ static const char *const HUMIDITY_PROPERTY = "hum";
 static const char *const PRESSURE_PROPERTY = "p";
 static const char *const ALARM_PROPERTY = "alarm";
 static const char *const PUMP_NODE = "pump";
-long sleepTime = 36e2;
+uint64_t sleepTime = 3600e6L;
 
 void setupNetwork();
 
@@ -152,8 +148,8 @@ void loop(void)
 {
     updateValues();
 
-    Serial.print(FPSTR("Sleeping for "));
-    Serial.println(sleepTime);
+//    Serial.print(FPSTR("Sleeping for "));
+//    Serial.println(sleepTime);
     setupSleep();
 }
 
@@ -214,7 +210,7 @@ void setupSleep()
     Wire.flush();
 
     Serial.println(FPSTR("Sleeping now"));
-    ESP.deepSleep(sleepTime * uS_TO_S_FACTOR, RFMode::RF_NO_CAL);
+    ESP.deepSleep(sleepTime, RFMode::RF_NO_CAL);
     delay(100);
 }
 
