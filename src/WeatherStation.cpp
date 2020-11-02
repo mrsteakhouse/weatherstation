@@ -156,7 +156,7 @@ void loop(void)
 void updateValues()
 {
     bme.takeForcedMeasurement();
-    double temp = bme.readTemperature() - 2;
+    double temp = bme.readTemperature();
     double hum = bme.readHumidity();
     double pr = bme.readPressure() / 100.0F;
     double pp = bmp.readPressure() / 100.0F;
