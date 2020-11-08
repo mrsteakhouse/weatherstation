@@ -111,14 +111,14 @@ void setupSensors()
                     Adafruit_BMP280::SAMPLING_NONE,
                     Adafruit_BMP280::SAMPLING_X1,
                     Adafruit_BMP280::FILTER_OFF,
-                    Adafruit_BMP280::STANDBY_MS_1);
+                    Adafruit_BMP280::STANDBY_MS_125);
     delay(20);
     bme.setSampling(Adafruit_BME280::MODE_FORCED,
                     Adafruit_BME280::SAMPLING_X16,
                     Adafruit_BME280::SAMPLING_X1,
                     Adafruit_BME280::SAMPLING_X8,
                     Adafruit_BME280::FILTER_OFF,
-                    Adafruit_BME280::STANDBY_MS_10);
+                    Adafruit_BME280::STANDBY_MS_125);
     delay(20);
 }
 
