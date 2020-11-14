@@ -23,6 +23,7 @@ PubSubClient client(espClient);
 
 const IPAddress mqttServer = IPAddress(192, 168, 0, 59);
 
+static const char *const DEVICE = "living-room-temp";
 static const char *const TEMPERATURE_NODE = "temperature";
 static const char *const TEMP_PROPERTY = "temp";
 static const char *const HUMIDITY_PROPERTY = "hum";
@@ -212,7 +213,7 @@ void updateValues()
 void sendValue(const char* node, const char* property, const char* value)
 {
     char topicBuffer[128];
-    sprintf(topicBuffer, "homie/living-room-temp/%s/%s", node, property);
+    sprintf(topicBuffer, "homie/%s/%s/%s", DEVICE, node, property);
 #ifdef DEBUG
     Serial.print(FPSTR("Publishing to: "));
     Serial.println(topicBuffer);
