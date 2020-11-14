@@ -1,6 +1,6 @@
 #!/bin/bash
 
-HOST=192.168.178.0.59
+HOST=192.168.0.59
 # Base
 mosquitto_pub -r -h $HOST -t 'homie/wintergarten/$homie' -m '4.0'
 mosquitto_pub -r -h $HOST -t 'homie/wintergarten/$name' -m 'Wintergarten Temperature'
