@@ -481,4 +481,12 @@ F 3 "~" H 4250 2800 50  0001 C CNN
 	1    4250 2800
 	0    1    1    0   
 $EndComp
+Wire Notes Line
+	1350 750  3800 750 
+Wire Notes Line
+	3800 750  3800 3000
+Wire Notes Line
+	3800 3000 1350 3000
+Wire Notes Line
+	1350 3000 1350 750 
 $EndSCHEMATC

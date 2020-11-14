@@ -9,7 +9,7 @@ mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/$nodes' -m 'temperature,pum
 
 # Air Quality data
 mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/$name' -m 'Temperature'
-mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/$properties' -m 'temp,hum,p'
+mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/$properties' -m 'temp,hum,p,bat'
 
 # Temperature
 mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/temp' -m '0'
@@ -31,6 +31,13 @@ mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/p/$name' -m 'Ai
 mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/p/$unit' -m 'hPa'
 mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/p/$datatype' -m 'float'
 mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/p/$settable' -m 'false'
+
+# Battery
+mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/bat' -m '0'
+mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/bat/$name' -m 'Battery'
+mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/bat/$unit' -m 'V'
+mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/bat/$datatype' -m 'float'
+mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/temperature/bat/$settable' -m 'false'
 
 #  Pump pressure state
 mosquitto_pub -r -h $HOST -t 'homie/living-room-temp/pump/$name' -m 'Pump state'

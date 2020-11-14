@@ -1,6 +1,5 @@
 #include <ESP8266WiFi.h>
 
-#include <Thing.h>
 #include <WebThingAdapter.h>
 
 #include <Wire.h>
@@ -11,6 +10,10 @@
 #include <SetWifiCredentials.h>
 #include <PubSubClient.h>
 #include <sstream>
+#include <MCP342X.h>
+
+#define LSB 0.0000625
+#define FACTOR 9.104
 
 Adafruit_BME280 bme;
 Adafruit_BMP280 bmp;
@@ -24,9 +27,12 @@ static const char *const TEMPERATURE_NODE = "temperature";
 static const char *const TEMP_PROPERTY = "temp";
 static const char *const HUMIDITY_PROPERTY = "hum";
 static const char *const PRESSURE_PROPERTY = "p";
+static const char *const BATTERY_PROPERTY = "bat";
 static const char *const ALARM_PROPERTY = "alarm";
 static const char *const PUMP_NODE = "pump";
 uint64_t sleepTime = 3600e6L;
+
+MCP342X adc;
 
 void setupNetwork();
 
@@ -120,6 +126,11 @@ void setupSensors()
                     Adafruit_BME280::FILTER_OFF,
                     Adafruit_BME280::STANDBY_MS_125);
     delay(20);
+
+    adc.configure( MCP342X_MODE_ONESHOT |
+                     MCP342X_CHANNEL_1 |
+                     MCP342X_SIZE_16BIT |
+                     MCP342X_GAIN_1X);
 }
 
 void connectMqtt()
@@ -148,9 +159,8 @@ void loop(void)
 {
     updateValues();
 
-//    Serial.print(FPSTR("Sleeping for "));
-//    Serial.println(sleepTime);
     setupSleep();
+//    delay(2000);
 }
 
 void updateValues()
@@ -161,6 +171,11 @@ void updateValues()
     double pr = bme.readPressure() / 100.0F;
     double pp = bmp.readPressure() / 100.0F;
 
+    static int16_t  result;
+    adc.startConversion();
+    adc.getResult(&result);
+    double bat = FACTOR * result * (double) (LSB / 1.0);
+
     bool isAlarm = pp - pr > 5;
 
     sendValue(TEMPERATURE_NODE, TEMP_PROPERTY, doubleToString(temp).c_str());
@@ -170,6 +185,8 @@ void updateValues()
     sendValue(TEMPERATURE_NODE, PRESSURE_PROPERTY, doubleToString(pr).c_str());
     delay(20);
     sendValue(PUMP_NODE, ALARM_PROPERTY, isAlarm ? "true" : "");
+    delay(20);
+    sendValue(TEMPERATURE_NODE, BATTERY_PROPERTY, doubleToString(bat).c_str());
     delay(20);
     
 
