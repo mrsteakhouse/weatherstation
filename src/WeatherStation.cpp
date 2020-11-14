@@ -16,13 +16,13 @@
 #define FACTOR 9.104
 
 Adafruit_BME280 bme;
-Adafruit_BMP280 bmp;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 const IPAddress mqttServer = IPAddress(192, 168, 0, 59);
 
+static const char *const DEVICE = "wintergarten";
 static const char *const TEMPERATURE_NODE = "temperature";
 static const char *const TEMP_PROPERTY = "temp";
 static const char *const HUMIDITY_PROPERTY = "hum";
@@ -71,7 +71,7 @@ void setupNetwork()
     WiFi.mode(WIFI_STA);
     WiFi.setAutoConnect(false);
     WiFi.disconnect();
-    IPAddress ip(192, 168, 0, 227);
+    IPAddress ip(192, 168, 0, 228);
     IPAddress gateway(192, 168, 0, 1);
     IPAddress subnet(255, 255, 255, 0);
     WiFi.config(ip, gateway, gateway, subnet);
@@ -102,22 +102,12 @@ void setupSensors()
 
     delay(1000);
 
-    if (!bmp.begin(0x77))
-    {
-        Serial.println(FPSTR("Could not find a valid BMP280 sensor"));
-        ESP.restart();
-    }
     if (!bme.begin(0x76))
     {
         Serial.println(FPSTR("Could not find a valid BME280 sensor"));
         ESP.restart();
     }
 
-    bmp.setSampling(Adafruit_BMP280::MODE_NORMAL,
-                    Adafruit_BMP280::SAMPLING_NONE,
-                    Adafruit_BMP280::SAMPLING_X1,
-                    Adafruit_BMP280::FILTER_OFF,
-                    Adafruit_BMP280::STANDBY_MS_125);
     delay(20);
     bme.setSampling(Adafruit_BME280::MODE_FORCED,
                     Adafruit_BME280::SAMPLING_X16,
@@ -137,7 +127,7 @@ void connectMqtt()
 {
     client.setServer(mqttServer, 1883);
     int retryCounter = 0;
-    String clientId = "living-room-weatherstation";
+    String clientId = "wintergarten-weatherstation";
     Serial.println(FPSTR("Connect to MQTT Broker"));
     while(!client.connected() && retryCounter < 5)
     {
@@ -169,22 +159,18 @@ void updateValues()
     double temp = bme.readTemperature();
     double hum = bme.readHumidity();
     double pr = bme.readPressure() / 100.0F;
-    double pp = bmp.readPressure() / 100.0F;
 
     static int16_t  result;
     adc.startConversion();
     adc.getResult(&result);
     double bat = FACTOR * result * (double) (LSB / 1.0);
 
-    bool isAlarm = pp - pr > 5;
 
     sendValue(TEMPERATURE_NODE, TEMP_PROPERTY, doubleToString(temp).c_str());
     delay(20);
     sendValue(TEMPERATURE_NODE, HUMIDITY_PROPERTY, doubleToString(hum).c_str());
     delay(20);
     sendValue(TEMPERATURE_NODE, PRESSURE_PROPERTY, doubleToString(pr).c_str());
-    delay(20);
-    sendValue(PUMP_NODE, ALARM_PROPERTY, isAlarm ? "true" : "");
     delay(20);
     sendValue(TEMPERATURE_NODE, BATTERY_PROPERTY, doubleToString(bat).c_str());
     delay(20);
@@ -212,7 +198,7 @@ void updateValues()
 void sendValue(const char* node, const char* property, const char* value)
 {
     char topicBuffer[128];
-    sprintf(topicBuffer, "homie/living-room-temp/%s/%s", node, property);
+    sprintf(topicBuffer, "homie/%s/%s/%s", DEVICE, node, property);
 #ifdef DEBUG
     Serial.print(FPSTR("Publishing to: "));
     Serial.println(topicBuffer);
@@ -222,7 +208,6 @@ void sendValue(const char* node, const char* property, const char* value)
 
 void setupSleep()
 {
-    bmp.setSampling(Adafruit_BMP280::MODE_SLEEP);
     bme.setSampling(Adafruit_BME280::MODE_SLEEP);
     Wire.flush();
 
