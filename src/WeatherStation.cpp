@@ -13,7 +13,6 @@
 #include <MCP342X.h>
 
 #define LSB 0.0000625
-#define FACTOR 9.104
 
 Adafruit_BME280 bme;
 
@@ -28,8 +27,7 @@ static const char *const TEMP_PROPERTY = "temp";
 static const char *const HUMIDITY_PROPERTY = "hum";
 static const char *const PRESSURE_PROPERTY = "p";
 static const char *const BATTERY_PROPERTY = "bat";
-static const char *const ALARM_PROPERTY = "alarm";
-static const char *const PUMP_NODE = "pump";
+
 uint64_t sleepTime = 3600e6L;
 
 MCP342X adc;
@@ -163,8 +161,8 @@ void updateValues()
     static int16_t  result;
     adc.startConversion();
     adc.getResult(&result);
-    double bat = FACTOR * result * (double) (LSB / 1.0);
-
+    double factor = (470000.0 + 120000.0) / 120000.0;
+    double bat = factor * result * (double) (LSB / 1.0);
 
     sendValue(TEMPERATURE_NODE, TEMP_PROPERTY, doubleToString(temp).c_str());
     delay(20);
