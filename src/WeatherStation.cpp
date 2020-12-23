@@ -1,13 +1,11 @@
 #include <ESP8266WiFi.h>
 
-#include <WebThingAdapter.h>
-
 #include <Wire.h>
 #include <Adafruit_BME280.h>
 #include <Adafruit_BMP280.h>
 #include <Adafruit_Sensor.h>
 
-#include <SetWifiCredentials.h>
+#include <WifiCredentials.h>
 #include <PubSubClient.h>
 #include <sstream>
 #include <MCP342X.h>
@@ -62,7 +60,6 @@ void setup(void)
 
 void setupNetwork()
 {
-    setWifiCredentials();
     delay(20);
 
     WiFi.persistent(false);
@@ -74,7 +71,8 @@ void setupNetwork()
     IPAddress subnet(255, 255, 255, 0);
     WiFi.config(ip, gateway, gateway, subnet);
 
-    WiFi.begin(Ssid, Password);
+    WifiCredentials credentials;
+    WiFi.begin(credentials.getSsid(), credentials.getPassword());
 
     int retryCounter = 0;
     while (WiFi.status() != WL_CONNECTED)
