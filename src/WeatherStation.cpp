@@ -34,8 +34,6 @@ void setupNetwork();
 
 void setupSensors();
 
-void setupAdapter(const IPAddress &ip);
-
 void connectMqtt();
 
 void updateValues();
