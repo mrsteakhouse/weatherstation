@@ -5,7 +5,7 @@ HOST=192.168.0.59
 mosquitto_pub -r -h $HOST -t 'homie/wintergarten/$homie' -m '4.0'
 mosquitto_pub -r -h $HOST -t 'homie/wintergarten/$name' -m 'Wintergarten Temperature'
 mosquitto_pub -r -h $HOST -t 'homie/wintergarten/$state' -m 'ready'
-mosquitto_pub -r -h $HOST -t 'homie/wintergarten/$nodes' -m 'temperature,pump'
+mosquitto_pub -r -h $HOST -t 'homie/wintergarten/$nodes' -m 'temperature'
 
 # Air Quality data
 mosquitto_pub -r -h $HOST -t 'homie/wintergarten/temperature/$name' -m 'Temperature'
